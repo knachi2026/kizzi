@@ -6,9 +6,7 @@
 <meta name="theme-color" content="#FFCC00">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json">
-<title>KIZI V8.3 FINAL - FIXED</title>
+<title>KIZI V8.4 - بلا قفل</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
@@ -29,7 +27,6 @@ header{background:#FFCC00;padding:10px;display:flex;justify-content:space-betwee
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:70;align-items:flex-end;justify-content:center}
 .modal.on{display:flex}.modalBox{background:#FFFEF0;width:100%;border-radius:20px 20px 0 0;padding:16px;max-height:92vh;overflow:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 input.field{width:100%;padding:12px;margin:6px 0;border:1.5px solid #FFE066;border-radius:10px;text-align:center;font-weight:900}
-#lockScreen{display:flex;position:fixed;inset:0;background:#111;z-index:100;align-items:center;justify-content:center;flex-direction:column;color:#fff}
 .btnMain{background:#111;color:#FFCC00;border:none;padding:12px;border-radius:10px;width:100%;font-weight:900;margin-top:6px}
 .btnMain:disabled{background:#888;color:#fff}
 .btnGive{background:#FEE2E2;color:#B91C1C;padding:16px;border-radius:14px;border:2px solid #FCA5A5;font-weight:900;flex:1}
@@ -63,20 +60,12 @@ input.field{width:100%;padding:12px;margin:6px 0;border:1.5px solid #FFE066;bord
 </style>
 </head>
 <body>
-<div id="lockScreen">
-  <div style="font-size:44px">🔒</div>
-  <h2 style="color:#FFCC00;margin:10px 0">KIZI V8.3</h2>
-  <p style="font-size:11px;color:#aaa">خاص - دخول بالكود</p>
-  <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" style="max-width:200px;background:#222;color:#FFCC00;border:2px solid #FFCC00;text-align:center;font-size:26px;padding:12px;border-radius:12px;letter-spacing:8px;margin-top:8px">
-  <button class="btnMain" style="max-width:200px;background:#FFCC00;color:#111;margin-top:12px" onclick="unlock()">دخول ✅</button>
-  <p style="font-size:11px;color:#777;margin-top:10px">غير مول المحل اللي عارف الكود</p>
-</div>
 <header>
   <div style="display:flex;gap:8px">
     <button class="btnTop" onclick="openSettings()">⚙️</button>
     <button class="btnTop" onclick="openArchive()">📦</button>
   </div>
-  <b id="headerTitle">KIZI V8.3</b>
+  <b id="headerTitle">KIZI V8.4</b>
 </header>
 <div id="mainView">
   <div style="display:flex;gap:8px;margin:10px">
@@ -110,77 +99,46 @@ input.field{width:100%;padding:12px;margin:6px 0;border:1.5px solid #FFE066;bord
 <div id="pageArchive"><div style="background:#111;color:#FFCC00;padding:10px;display:flex;justify-content:space-between;align-items:center"><button onclick="closeArchive()" style="background:#FFCC00;color:#111;border:none;padding:8px 16px;border-radius:10px;font-weight:900">← رجوع</button><b>📦 سلة الكليان</b><div style="width:60px"></div></div><div id="archiveList" style="background:#fff"></div></div>
 <div id="pageTrashTx"><div style="background:#B91C1C;color:#fff;padding:10px;display:flex;justify-content:space-between;align-items:center"><button onclick="closeTrashTx()" style="background:#fff;color:#B91C1C;border:none;padding:8px 16px;border-radius:10px;font-weight:900">← رجوع</button><b>🗑️ سلة العمليات - <span id="trashTxName"></span></b><div style="width:60px"></div></div><div style="display:flex;gap:8px;padding:10px;background:#FFF3CD;align-items:center"><label style="display:flex;gap:6px;align-items:center;font-weight:900;font-size:13px"><input type="checkbox" id="trashSelectAll" class="chk" onchange="toggleAllTrashTx(this.checked)"> حدد كاملين</label><span id="trashSelCount" style="font-weight:900;font-size:13px">0 محددة</span></div><div id="trashTxList"></div><div style="position:sticky;bottom:0;background:#111;padding:12px;display:flex;gap:8px"><button onclick="restoreSelectedTrashTx()" style="flex:1;background:#DCFCE7;border:1px solid #86EFAC;padding:14px;border-radius:10px;font-weight:900">↩️ رجع المحدد</button><button onclick="deleteSelectedTrashTx()" style="flex:1;background:#FEE2E2;border:1px solid #FCA5A5;padding:14px;border-radius:10px;font-weight:900;color:#B91C1C">🗑️ مسح المحدد نهائيا</button></div></div>
 <div id="pagePublic">
-  <div class="pubHeader">
-    <small>متجر كيزي - حسابك</small>
-    <b id="pubName">عبدالهادي دكالي 40</b>
-  </div>
-  <div class="pubTotalBox">
-    <div class="label">المجموع ديالك</div>
-    <div class="total" id="pubTotal">DH 926.5</div>
-  </div>
+  <div class="pubHeader"><small>متجر كيزي - حسابك</small><b id="pubName">الحساب</b></div>
+  <div class="pubTotalBox"><div class="label">المجموع ديالك</div><div class="total" id="pubTotal">DH 0</div></div>
   <div id="pubTxList"></div>
-  <div class="waCard" id="waCardPublic">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" onclick="contactShop()" style="cursor:pointer">
-    <h3>إلا بغيتي شي مساعدة؟</h3>
-    <p>ورك هنا تواصل معايا مباشرة فالواتساب</p>
-    <button class="waBtn" onclick="contactShop()">💬 تواصل معايا - 0670440517</button>
-    <div style="font-size:10px;color:#999;margin-top:8px">كيخرج عندي نيشان فالخاص</div>
-  </div>
+  <div class="waCard" id="waCardPublic"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" onclick="contactShop()" style="cursor:pointer"><h3>إلا بغيتي شي مساعدة؟</h3><p>ورك هنا تواصل معايا مباشرة فالواتساب</p><button class="waBtn" onclick="contactShop()">💬 تواصل معايا - 0670440517</button></div>
   <div style="text-align:center;padding:20px;color:#aaa;font-size:11px">Powered by KIZI</div>
 </div>
 <div class="modal" id="mNew"><div class="modalBox"><h3 id="newTitle">زبون جديد</h3><input id="nName" class="field" placeholder="السمية *"><input id="nPhone" class="field" placeholder="النمرة"><button class="btnMain" id="btnSaveCust" onclick="saveCust()">حفظ ✅</button><button onclick="closeModal('mNew')" style="width:100%;margin-top:6px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
 <div class="modal" id="mTx"><div class="modalBox"><h3 style="text-align:center">شحال؟</h3><input id="txAmount" class="field" type="text" inputmode="decimal" placeholder="مثلا: 11"><input id="txNote" class="field" placeholder="شنو؟"><button class="btnMain" id="btnSaveTx" onclick="saveTx()">حفظ ✅</button><button onclick="closeModal('mTx')" style="width:100%;margin-top:6px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
 <div class="modal" id="mEditCust"><div class="modalBox"><h3>✏️ تعديل الكليان</h3><input id="eName" class="field"><input id="ePhone" class="field"><button class="btnMain" onclick="saveEditCust()">💾 حفظ + Sheet</button><hr style="margin:14px 0"><div style="background:#FFF3CD;border:1px dashed #FFC107;border-radius:12px;padding:12px"><b style="font-size:13px;color:#B91C1C">🗑️ مسح؟</b><button class="btnDanger" onclick="closeModal('mEditCust'); openDeleteAllTx()">🗑️ مسح حساب كامل - كيمشي للسلة</button><button class="btnSalla" style="margin-top:8px;background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5" onclick="closeModal('mEditCust'); askPermDelete(curId, customers[curId]?.name||'')">🗑️ مسح نهائي - كتب مسح</button></div><button onclick="closeModal('mEditCust')" style="width:100%;margin-top:12px;padding:10px;border:none;background:#eee;border-radius:10px">إغلاق</button></div></div>
-<div class="modal" id="mSettings"><div class="modalBox"><h3>⚙️ الإعدادات</h3><p style="font-size:11px;color:#666">نمرة الواتساب ديالك باش يتواصلو معاك الكليان:</p><input id="shopPhone" class="field" placeholder="0670440517" value="212670440517"><input id="newPin" class="field" type="password" placeholder="كود جديد - غير إلا بغيتي تبدلو"><button class="btnMain" onclick="saveSettings()">حفظ الإعدادات ✅</button><hr style="margin:14px 0"><button class="btnBackup" onclick="exportBackup()">💾 نسخة احتياطية</button><button class="btnSalla" onclick="closeModal('mSettings'); openArchive()">📦 سلة الكليان</button><button class="btnSalla" onclick="closeModal('mSettings'); if(curId) openTrashTx()">🗑️ سلة العمليات</button><button onclick="closeModal('mSettings')" style="width:100%;margin-top:12px;padding:10px;border:none;background:#eee;border-radius:10px">إغلاق</button></div></div>
+<div class="modal" id="mSettings"><div class="modalBox"><h3>⚙️ الإعدادات</h3><p style="font-size:11px;color:#666">نمرة الواتساب ديالك باش يتواصلو معاك الكليان:</p><input id="shopPhone" class="field" placeholder="0670440517" value="212670440517"><button class="btnMain" onclick="saveSettings()">حفظ الإعدادات ✅</button><hr style="margin:14px 0"><button class="btnBackup" onclick="exportBackup()">💾 نسخة احتياطية</button><button class="btnSalla" onclick="closeModal('mSettings'); openArchive()">📦 سلة الكليان</button><button class="btnSalla" onclick="closeModal('mSettings'); if(curId) openTrashTx()">🗑️ سلة العمليات</button><button onclick="closeModal('mSettings')" style="width:100%;margin-top:12px;padding:10px;border:none;background:#eee;border-radius:10px">إغلاق</button></div></div>
 <div class="modal" id="mEditTx"><div class="modalBox"><h3 style="text-align:center">✏️ تعديل + Sheet</h3><input id="etAmount" class="field" type="text" inputmode="decimal"><input id="etNote" class="field"><div style="display:flex;gap:8px;margin-top:10px"><button class="btnMain" onclick="saveEditTx()" style="flex:1">💾 حفظ + Sheet</button><button onclick="openConfirmDeleteSingle()" style="flex:1;background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;padding:12px;border-radius:10px;font-weight:900">🗑️ مسح هادي - للسلة</button></div><button onclick="closeModal('mEditTx')" style="width:100%;margin-top:8px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
 <div class="modal" id="mConfirm"><div class="modalBox"><h3 id="confirmTitle" style="text-align:center;color:#B91C1C">⚠️ تأكيد</h3><p id="confirmText" style="font-size:13px;margin:10px 0;text-align:center">كتب كلمة <b style="background:#FEE2E2;padding:2px 6px">مسح</b> - غادي تمشي للسلة و تقدر ترجعها</p><input id="confirmInput" class="field" placeholder="كتب مسح هنا"><button class="btnMain" style="background:#B91C1C" onclick="doConfirmedAction()">تأكيد 🗑️</button><button onclick="closeModal('mConfirm')" style="width:100%;margin-top:8px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
 <div class="modal" id="mConfirmTrash"><div class="modalBox"><h3 id="trashConfirmTitle" style="text-align:center;color:#B91C1C">⚠️ مسح نهائي؟</h3><p style="font-size:13px;margin:10px 0;text-align:center">هادي ما كترجعش - كتب <b style="background:#FEE2E2;padding:2px 6px">مسح</b></p><input id="trashConfirmInput" class="field" placeholder="كتب مسح هنا"><button class="btnMain" style="background:#B91C1C" onclick="doTrashConfirmed()">تأكيد مسح نهائي 🗑️</button><button onclick="closeModal('mConfirmTrash')" style="width:100%;margin-top:8px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
-
-
 
 
 <script>
 const SHEET_URL="https://script.google.com/macros/s/AKfycbxJAvownby7QUCxvvqAmYhGnDppTVBQmwMRtk41pAi2R8ETRPAjHLrOecyvq9ZHPsye/exec";
 let SHOP_PHONE = localStorage.getItem('kizi_shop_phone') || '212670440517';
 let currentPubData = null;
-// --- FIX: sendToSheet مقاد - ما كيبقاش يبلوكي الثاني ---
+// --- طريقة V7.2 اللي خدامة: fetch + Image ---
 function sendToSheet(payload){
   try{
     const dataStr=encodeURIComponent(JSON.stringify(payload));
-    const url=SHEET_URL+"?data="+dataStr+"&uid="+Date.now()+"_"+Math.random();
+    const url=SHEET_URL+"?data="+dataStr;
     fetch(url,{method:"GET",mode:"no-cors"}).catch(()=>{});
+    const img=new Image(); img.src=url+"&t="+Date.now();
   }catch(e){}
 }
 const firebaseConfig={apiKey:"AIzaSyBrbaNx5k70ny-p0W8vRZP-6_5p2zMOUJ4",authDomain:"kizzi-shop.firebaseapp.com",projectId:"kizzi-shop",storageBucket:"kizzi-shop.firebasestorage.app",messagingSenderId:"737501957799",appId:"1:737501957799:web:1295635e3d2310619a1582"};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 function toLatinNum(s){if(!s)return"";return s.toString().replace(/[٠-٩]/g,d=>String.fromCharCode(d.charCodeAt(0)-1632+48)).replace(/[۰-۹]/g,d=>String.fromCharCode(d.charCodeAt(0)-1728+48)).replace(/,/g,".").replace(/[^0-9.\-]/g,"")}
-function normalizePin(s){if(!s)return"";let r=s.toString();r=r.replace(/[٠-٩]/g,d=>String.fromCharCode(d.charCodeAt(0)-1632+48));r=r.replace(/[۰-۹]/g,d=>String.fromCharCode(d.charCodeAt(0)-1728+48));return r.replace(/[^0-9]/g,'')}
 function fix(n){let v=parseFloat(toLatinNum(n));return isNaN(v)?0:Math.round(v*100)/100}
 function fmt(n){let s=Math.abs(fix(n)).toFixed(1);return s.endsWith('.0')?s.slice(0,-2):s}
-let customers={},curId=null,txType='give',search='',unsubTx=null,savedPin=localStorage.getItem('kizi_pin')||'2020',unsubBook=null,unsubArc=null,unsubTrash=null,filterType='client',sortMode='big',editTxId=null,editTxOldAmount=0,editTxOldType='give',pendingAction=null,pendingTrashAction=null,pendingTrashId=null,selectMode=false,selectedIds=new Set(),trashSelected=new Set(),currentTxIds=[];
+let customers={},curId=null,txType='give',search='',unsubTx=null,unsubBook=null,unsubArc=null,unsubTrash=null,filterType='client',sortMode='big',editTxId=null,editTxOldAmount=0,editTxOldType='give',pendingAction=null,pendingTrashAction=null,pendingTrashId=null,selectMode=false,selectedIds=new Set(),trashSelected=new Set(),currentTxIds=[];
 function getCol(){return filterType==='fournisseur' ? 'credit_fournisseurs' : 'credit_customers'}
 function getSheetName(){return filterType==='fournisseur' ? 'fournisseurs' : 'clients'}
 function closeModal(id){document.getElementById(id).classList.remove('on')}
-function isUnlocked(){let t=localStorage.getItem('kizi_unlock_time');return t&&(Date.now()-Number(t))<90*24*60*60*1000}
-function unlock(){
-  let raw=document.getElementById('pinInput').value||'';
-  let v=normalizePin(raw);
-  let cur=normalizePin(savedPin||'2020');
-  if(v && v.length===4 && v===cur){
-    document.getElementById('lockScreen').style.display='none';
-    document.getElementById('pinInput').value='';
-    localStorage.setItem('kizi_unlock_time',Date.now().toString());
-  } else {
-    alert('الكود غالط');
-    document.getElementById('pinInput').value='';
-    document.getElementById('pinInput').focus();
-  }
-}
-function openSettings(){document.getElementById('shopPhone').value=SHOP_PHONE;document.getElementById('newPin').value='';document.getElementById('mSettings').classList.add('on')}
+function openSettings(){document.getElementById('shopPhone').value=SHOP_PHONE;document.getElementById('mSettings').classList.add('on')}
 function saveSettings(){
-  let p=normalizePin(document.getElementById('newPin').value.trim());
-  if(p){ if(p.length!==4)return alert('خاص 4 أرقام'); localStorage.setItem('kizi_pin',p); savedPin=p; }
   let phone=document.getElementById('shopPhone').value.trim().replace(/[^0-9]/g,'');
   if(phone){
     if(phone.startsWith('0')) phone='212'+phone.slice(1);
@@ -206,6 +164,7 @@ function toggleSelectMode(){selectMode=!selectMode;if(selectMode){document.getEl
 function exitSelectMode(){selectMode=false;selectedIds.clear();document.getElementById('selBar').classList.remove('on');document.getElementById('selBtn').innerHTML='☑️<br>تحديد للمسح';document.getElementById('selCount').textContent='0';let b=document.getElementById('btnSelectAllTx');if(b)b.textContent='☑️ حدد كاملين';loadTx()}
 function toggleOne(id){if(selectedIds.has(id)){selectedIds.delete(id)}else{selectedIds.add(id)}document.getElementById('selCount').textContent=selectedIds.size;let b=document.getElementById('btnSelectAllTx');if(b)b.textContent=(selectedIds.size===currentTxIds.length&&currentTxIds.length>0)?'❌ حيد التحديد':'☑️ حدد كاملين';loadTx()}
 function toggleSelectAllTx(){if(selectedIds.size===currentTxIds.length&&currentTxIds.length>0){selectedIds.clear();document.getElementById('btnSelectAllTx').textContent='☑️ حدد كاملين'}else{currentTxIds.forEach(id=>selectedIds.add(id));document.getElementById('btnSelectAllTx').textContent='❌ حيد التحديد'}document.getElementById('selCount').textContent=selectedIds.size;loadTx()}
+
 
 
 
@@ -308,11 +267,8 @@ async function saveTx(){
     customers[curId].totalDebt=newDebt;
     const c=customers[curId];
     const link=location.origin+location.pathname+'?c='+curId+'&t='+sheet;
-    // FIX: الاولى دابا، والثانية من بعد 800ms باش ما يتعاركوش
     sendToSheet({sheet:sheet,ID:curId,name:c.name,phone:c.phone||'',totalDebt:newDebt,type:sheet,updatedAt:new Date().toISOString(),link:link,book:sheet});
-    setTimeout(()=>{
-      sendToSheet({sheet:'transactions',ID:ref.id,clientId:curId,clientName:c.name,type:txType,amount:amt,note:note,date:new Date().toISOString(),book:sheet,totalDebt:newDebt});
-    }, 800);
+    sendToSheet({sheet:'transactions',ID:ref.id,clientId:curId,clientName:c.name,type:txType,amount:amt,note:note,date:new Date().toISOString(),book:sheet,totalDebt:newDebt});
   }catch(e){alert('خطأ: '+e.message)}finally{
     document.getElementById('btnSaveTx').disabled=false;
     document.getElementById('btnSaveTx').textContent='حفظ ✅';
@@ -390,10 +346,17 @@ window.addEventListener('popstate', function(e){
   if(document.getElementById('pageArchive') && document.getElementById('pageArchive').style.display==='block'){closeArchiveNoBack();return}
   if(document.getElementById('pageCust') && document.getElementById('pageCust').style.display==='block'){closeCustNoBack();return}
 });
-(function checkLink(){let p=new URLSearchParams(location.search);let cId=p.get('c');if(cId){document.getElementById('lockScreen').style.display='none';document.getElementById('mainView').style.display='none';document.getElementById('pagePublic').style.display='block';loadPublicPage(cId);return}if(p.has('resetpin')){localStorage.removeItem('kizi_pin');localStorage.removeItem('kizi_unlock_time')}if(isUnlocked())document.getElementById('lockScreen').style.display='none';document.getElementById('pinInput').addEventListener('keydown',e=>{if(e.key=='Enter')unlock()});loadBook()})();
-</script>
-<script>
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+(function checkLink(){
+  let p=new URLSearchParams(location.search);
+  let cId=p.get('c');
+  if(cId){
+    document.getElementById('mainView').style.display='none';
+    document.getElementById('pagePublic').style.display='block';
+    loadPublicPage(cId);
+    return
+  }
+  loadBook();
+})();
 </script>
 </body>
 </html>
