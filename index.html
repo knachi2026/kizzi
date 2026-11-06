@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-<title>KIZI V8.3 FINAL</title>
+<title>KIZI V8.3 FINAL - FIXED</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
@@ -109,12 +109,6 @@ input.field{width:100%;padding:12px;margin:6px 0;border:1.5px solid #FFE066;bord
 </div>
 <div id="pageArchive"><div style="background:#111;color:#FFCC00;padding:10px;display:flex;justify-content:space-between;align-items:center"><button onclick="closeArchive()" style="background:#FFCC00;color:#111;border:none;padding:8px 16px;border-radius:10px;font-weight:900">← رجوع</button><b>📦 سلة الكليان</b><div style="width:60px"></div></div><div id="archiveList" style="background:#fff"></div></div>
 <div id="pageTrashTx"><div style="background:#B91C1C;color:#fff;padding:10px;display:flex;justify-content:space-between;align-items:center"><button onclick="closeTrashTx()" style="background:#fff;color:#B91C1C;border:none;padding:8px 16px;border-radius:10px;font-weight:900">← رجوع</button><b>🗑️ سلة العمليات - <span id="trashTxName"></span></b><div style="width:60px"></div></div><div style="display:flex;gap:8px;padding:10px;background:#FFF3CD;align-items:center"><label style="display:flex;gap:6px;align-items:center;font-weight:900;font-size:13px"><input type="checkbox" id="trashSelectAll" class="chk" onchange="toggleAllTrashTx(this.checked)"> حدد كاملين</label><span id="trashSelCount" style="font-weight:900;font-size:13px">0 محددة</span></div><div id="trashTxList"></div><div style="position:sticky;bottom:0;background:#111;padding:12px;display:flex;gap:8px"><button onclick="restoreSelectedTrashTx()" style="flex:1;background:#DCFCE7;border:1px solid #86EFAC;padding:14px;border-radius:10px;font-weight:900">↩️ رجع المحدد</button><button onclick="deleteSelectedTrashTx()" style="flex:1;background:#FEE2E2;border:1px solid #FCA5A5;padding:14px;border-radius:10px;font-weight:900;color:#B91C1C">🗑️ مسح المحدد نهائيا</button></div></div>
-
-
-
-
-
-
 <div id="pagePublic">
   <div class="pubHeader">
     <small>متجر كيزي - حسابك</small>
@@ -141,22 +135,21 @@ input.field{width:100%;padding:12px;margin:6px 0;border:1.5px solid #FFE066;bord
 <div class="modal" id="mEditTx"><div class="modalBox"><h3 style="text-align:center">✏️ تعديل + Sheet</h3><input id="etAmount" class="field" type="text" inputmode="decimal"><input id="etNote" class="field"><div style="display:flex;gap:8px;margin-top:10px"><button class="btnMain" onclick="saveEditTx()" style="flex:1">💾 حفظ + Sheet</button><button onclick="openConfirmDeleteSingle()" style="flex:1;background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;padding:12px;border-radius:10px;font-weight:900">🗑️ مسح هادي - للسلة</button></div><button onclick="closeModal('mEditTx')" style="width:100%;margin-top:8px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
 <div class="modal" id="mConfirm"><div class="modalBox"><h3 id="confirmTitle" style="text-align:center;color:#B91C1C">⚠️ تأكيد</h3><p id="confirmText" style="font-size:13px;margin:10px 0;text-align:center">كتب كلمة <b style="background:#FEE2E2;padding:2px 6px">مسح</b> - غادي تمشي للسلة و تقدر ترجعها</p><input id="confirmInput" class="field" placeholder="كتب مسح هنا"><button class="btnMain" style="background:#B91C1C" onclick="doConfirmedAction()">تأكيد 🗑️</button><button onclick="closeModal('mConfirm')" style="width:100%;margin-top:8px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
 <div class="modal" id="mConfirmTrash"><div class="modalBox"><h3 id="trashConfirmTitle" style="text-align:center;color:#B91C1C">⚠️ مسح نهائي؟</h3><p style="font-size:13px;margin:10px 0;text-align:center">هادي ما كترجعش - كتب <b style="background:#FEE2E2;padding:2px 6px">مسح</b></p><input id="trashConfirmInput" class="field" placeholder="كتب مسح هنا"><button class="btnMain" style="background:#B91C1C" onclick="doTrashConfirmed()">تأكيد مسح نهائي 🗑️</button><button onclick="closeModal('mConfirmTrash')" style="width:100%;margin-top:8px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
+
+
+
+
 <script>
 const SHEET_URL="https://script.google.com/macros/s/AKfycbxJAvownby7QUCxvvqAmYhGnDppTVBQmwMRtk41pAi2R8ETRPAjHLrOecyvq9ZHPsye/exec";
-let isSaving=false; let lastSentId="";
 let SHOP_PHONE = localStorage.getItem('kizi_shop_phone') || '212670440517';
 let currentPubData = null;
+// --- FIX: sendToSheet مقاد - ما كيبقاش يبلوكي الثاني ---
 function sendToSheet(payload){
-  if(isSaving) return;
-  let key=(payload.ID||"")+"_"+(payload.amount||payload.totalDebt||"")+"_"+(payload.sheet||"");
-  if(lastSentId===key) return;
-  lastSentId=key; isSaving=true;
   try{
     const dataStr=encodeURIComponent(JSON.stringify(payload));
-    const url=SHEET_URL+"?data="+dataStr+"&uid="+Date.now();
-    fetch(url,{method:"GET",mode:"no-cors"}).then(()=>{isSaving=false}).catch(()=>{isSaving=false});
-    setTimeout(()=>{isSaving=false; lastSentId="";},2500);
-  }catch(e){isSaving=false}
+    const url=SHEET_URL+"?data="+dataStr+"&uid="+Date.now()+"_"+Math.random();
+    fetch(url,{method:"GET",mode:"no-cors"}).catch(()=>{});
+  }catch(e){}
 }
 const firebaseConfig={apiKey:"AIzaSyBrbaNx5k70ny-p0W8vRZP-6_5p2zMOUJ4",authDomain:"kizzi-shop.firebaseapp.com",projectId:"kizzi-shop",storageBucket:"kizzi-shop.firebasestorage.app",messagingSenderId:"737501957799",appId:"1:737501957799:web:1295635e3d2310619a1582"};
 firebase.initializeApp(firebaseConfig);
@@ -204,7 +197,7 @@ function loadBook(){if(unsubBook)unsubBook();unsubBook=db.collection(getCol()).w
 function render(){let div=document.getElementById('list');div.innerHTML='';let ids=Object.keys(customers).filter(id=>!search||customers[id].name.toLowerCase().includes(search));ids.sort((a,b)=>{let da=Math.abs(fix(customers[a].totalDebt)),db=Math.abs(fix(customers[b].totalDebt));return sortMode=='small'?da-db:db-da});if(!ids.length){div.innerHTML='<div style="text-align:center;padding:20px;color:#999">📭 خاوية</div>';document.getElementById('totalAll').textContent='DH 0';document.getElementById('totalCount').textContent='0 كليان';return}ids.forEach(id=>{let c=customers[id];let icon=filterType==='fournisseur'?'🚚':'👤';let col=fix(c.totalDebt)<0?'#15803D':'#C1272D';div.innerHTML+=`<div class="list-item" onclick="openCust('${id}')"><div style="display:flex;align-items:center;gap:8px"><span>${icon}</span><b>${c.name}</b></div><span style="color:${col};font-weight:900">DH ${fmt(fix(c.totalDebt))}</span></div>`});let total=0;Object.values(customers).forEach(c=>total+=fix(c.totalDebt));let totCol=total<0?'#15803D':'#C1272D';document.getElementById('totalAll').style.color=totCol;document.getElementById('totalAll').textContent=`DH ${fmt(total)}`;document.getElementById('totalCount').textContent=`${Object.keys(customers).length} ${filterType==='fournisseur'?'فورنيسور':'كليان'}`}
 document.getElementById('search').addEventListener('input',e=>{search=e.target.value.toLowerCase();render()});
 function openNew(){document.getElementById('mNew').classList.add('on')}
-async function saveCust(){if(isSaving){alert('تسنا شوية');return}let name=document.getElementById('nName').value.trim();if(!name)return alert('كتب السمية');let phone=document.getElementById('nPhone').value.trim();closeModal('mNew');try{let col=getCol();let sheet=getSheetName();let ref=await db.collection(col).add({name,phone,totalDebt:0,archived:false,type:sheet,createdAt:firebase.firestore.FieldValue.serverTimestamp()});const link=location.origin+location.pathname+'?c='+ref.id+'&t='+sheet;sendToSheet({sheet:sheet,ID:ref.id,name:name,phone:phone,totalDebt:0,type:sheet,updatedAt:new Date().toISOString(),link:link,book:sheet});setTimeout(()=>openCust(ref.id),700)}catch(e){alert('خطأ: '+e.message)}}
+async function saveCust(){let name=document.getElementById('nName').value.trim();if(!name)return alert('كتب السمية');let phone=document.getElementById('nPhone').value.trim();closeModal('mNew');try{let col=getCol();let sheet=getSheetName();let ref=await db.collection(col).add({name,phone,totalDebt:0,archived:false,type:sheet,createdAt:firebase.firestore.FieldValue.serverTimestamp()});const link=location.origin+location.pathname+'?c='+ref.id+'&t='+sheet;sendToSheet({sheet:sheet,ID:ref.id,name:name,phone:phone,totalDebt:0,type:sheet,updatedAt:new Date().toISOString(),link:link,book:sheet});setTimeout(()=>openCust(ref.id),700)}catch(e){alert('خطأ: '+e.message)}}
 function openCust(id){curId=id;let c=customers[id];document.getElementById('pcName').textContent=c.name;document.getElementById('pcPhone').textContent=c.phone||'';let debt=fix(c.totalDebt);let col=debt<0?'#15803D':'#C1272D';document.getElementById('pcTotal').textContent=`DH ${fmt(debt)}`;document.getElementById('pcTotal').style.color=col;document.getElementById('pageCust').style.display='block';try{history.pushState({page:'cust',id:id},'')}catch(e){}loadTx()}
 function closeCust(){let isOpen=document.getElementById('pageCust').style.display==='block';document.getElementById('pageCust').style.display='none';if(unsubTx)unsubTx();exitSelectMode();loadBook();if(isOpen && history.state && history.state.page==='cust'){try{history.back()}catch(e){}}}
 function closeCustNoBack(){document.getElementById('pageCust').style.display='none';if(unsubTx)unsubTx();exitSelectMode();loadBook()}
@@ -213,6 +206,9 @@ function toggleSelectMode(){selectMode=!selectMode;if(selectMode){document.getEl
 function exitSelectMode(){selectMode=false;selectedIds.clear();document.getElementById('selBar').classList.remove('on');document.getElementById('selBtn').innerHTML='☑️<br>تحديد للمسح';document.getElementById('selCount').textContent='0';let b=document.getElementById('btnSelectAllTx');if(b)b.textContent='☑️ حدد كاملين';loadTx()}
 function toggleOne(id){if(selectedIds.has(id)){selectedIds.delete(id)}else{selectedIds.add(id)}document.getElementById('selCount').textContent=selectedIds.size;let b=document.getElementById('btnSelectAllTx');if(b)b.textContent=(selectedIds.size===currentTxIds.length&&currentTxIds.length>0)?'❌ حيد التحديد':'☑️ حدد كاملين';loadTx()}
 function toggleSelectAllTx(){if(selectedIds.size===currentTxIds.length&&currentTxIds.length>0){selectedIds.clear();document.getElementById('btnSelectAllTx').textContent='☑️ حدد كاملين'}else{currentTxIds.forEach(id=>selectedIds.add(id));document.getElementById('btnSelectAllTx').textContent='❌ حيد التحديد'}document.getElementById('selCount').textContent=selectedIds.size;loadTx()}
+
+
+
 
 
 
@@ -297,7 +293,6 @@ async function doTrashConfirmed(){
   pendingTrashAction=null;pendingTrashId=null;
 }
 async function saveTx(){
-  if(isSaving){alert('تسنا ثانية...');return}
   let raw=document.getElementById('txAmount').value;let amt=fix(raw);if(!amt)return alert('كتب شحال');
   let note=document.getElementById('txNote').value.trim();
   let cur=fix(customers[curId].totalDebt);let newDebt=fix(txType=='give'?cur+amt:cur-amt);
@@ -313,12 +308,14 @@ async function saveTx(){
     customers[curId].totalDebt=newDebt;
     const c=customers[curId];
     const link=location.origin+location.pathname+'?c='+curId+'&t='+sheet;
+    // FIX: الاولى دابا، والثانية من بعد 800ms باش ما يتعاركوش
     sendToSheet({sheet:sheet,ID:curId,name:c.name,phone:c.phone||'',totalDebt:newDebt,type:sheet,updatedAt:new Date().toISOString(),link:link,book:sheet});
-    sendToSheet({sheet:'transactions',ID:ref.id,clientId:curId,clientName:c.name,type:txType,amount:amt,note:note,date:new Date().toISOString(),book:sheet,totalDebt:newDebt});
+    setTimeout(()=>{
+      sendToSheet({sheet:'transactions',ID:ref.id,clientId:curId,clientName:c.name,type:txType,amount:amt,note:note,date:new Date().toISOString(),book:sheet,totalDebt:newDebt});
+    }, 800);
   }catch(e){alert('خطأ: '+e.message)}finally{
     document.getElementById('btnSaveTx').disabled=false;
     document.getElementById('btnSaveTx').textContent='حفظ ✅';
-    setTimeout(()=>{isSaving=false; lastSentId="";},2500);
   }
 }
 function openEditCust(){let c=customers[curId];document.getElementById('eName').value=c.name;document.getElementById('ePhone').value=c.phone||'';document.getElementById('mEditCust').classList.add('on')}
