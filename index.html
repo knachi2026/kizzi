@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#FFCC00">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<title>KIZI V8.3 FINAL</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Cairo,sans-serif}
+body{background:#FFFEF0;padding-bottom:env(safe-area-inset-bottom)}
+header{background:#FFCC00;padding:10px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20}
+.btnTop{background:#111;color:#FFCC00;border:none;width:42px;height:42px;border-radius:10px;font-size:18px}
+.btnSwitch{flex:1;padding:14px;border-radius:14px;border:2px solid #111;font-weight:900;font-size:15px}
+.btnSwitch.active{background:#111;color:#FFCC00}
+.btnSwitch:not(.active){background:#fff;color:#111}
+.cardBlack{background:#111;color:#FFCC00;border-radius:22px;padding:18px;text-align:center;margin:12px}
+.cardBlack .big{font-size:36px;font-weight:900;color:#C1272D;margin:8px 0}
+.searchBox{background:#fff;border:2px solid #FFE066;border-radius:14px;padding:6px;display:flex;align-items:center;margin:10px}
+.searchBox input{flex:1;border:none;text-align:center;font-weight:700;outline:none}
+.btnAdd{background:#111;color:#FFCC00;border:none;width:48px;height:48px;border-radius:12px;font-size:22px}
+.list-item{background:#fff;border-bottom:1px solid #eee;padding:14px 12px;display:flex;justify-content:space-between;align-items:center}
+#pageCust,#pagePublic,#pageArchive,#pageTrashTx{display:none;position:fixed;inset:0;background:#FFFEF0;z-index:30;overflow:auto}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:70;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}.modalBox{background:#FFFEF0;width:100%;border-radius:20px 20px 0 0;padding:16px;max-height:92vh;overflow:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+input.field{width:100%;padding:12px;margin:6px 0;border:1.5px solid #FFE066;border-radius:10px;text-align:center;font-weight:900}
+#lockScreen{display:flex;position:fixed;inset:0;background:#111;z-index:100;align-items:center;justify-content:center;flex-direction:column;color:#fff}
+.btnMain{background:#111;color:#FFCC00;border:none;padding:12px;border-radius:10px;width:100%;font-weight:900;margin-top:6px}
+.btnMain:disabled{background:#888;color:#fff}
+.btnGive{background:#FEE2E2;color:#B91C1C;padding:16px;border-radius:14px;border:2px solid #FCA5A5;font-weight:900;flex:1}
+.btnTake{background:#DCFCE7;color:#15803D;padding:16px;border-radius:14px;border:2px solid #86EFAC;font-weight:900;flex:1}
+.restaChip{font-size:11px;background:#FFF9C4;border:1px solid #FFE066;padding:4px 10px;border-radius:20px;display:inline-block;color:#111;font-weight:700;margin-top:4px}
+.btnSort{flex:1;padding:10px;border-radius:10px;border:1px solid #111;background:#fff;font-weight:700}
+.btnBackup{background:#111;color:#FFCC00;padding:14px;border-radius:12px;width:100%;border:none;font-weight:900;margin:6px 0}
+.btnSalla{background:#FFF8E1;color:#111;padding:14px;border-radius:12px;width:100%;border:2px solid #FFE066;font-weight:900;margin:6px 0}
+.btnDanger{background:#FEE2E2;color:#B91C1C;border:2px solid #FCA5A5;padding:12px;border-radius:10px;width:100%;font-weight:900;margin-top:10px}
+.selBar{display:none;position:fixed;bottom:0;left:0;right:0;background:#111;color:#FFCC00;padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom));z-index:50;align-items:center;justify-content:space-between}
+.selBar.on{display:flex}
+.chk{width:24px;height:24px;accent-color:#111}
+.txRowSel{background:#FFF9C4 !important;border-right:4px solid #FFCC00 !important}
+.pubHeader{background:#FFCC00;padding:14px;text-align:center}
+.pubHeader small{font-size:12px;color:#111;display:block}
+.pubHeader b{font-size:18px;color:#111;display:block;margin-top:2px}
+.pubTotalBox{background:#fff;padding:18px 0;text-align:center;border-bottom:1px solid #eee}
+.pubTotalBox .label{font-size:12px;color:#888}
+.pubTotalBox .total{font-size:32px;font-weight:900;color:#C1272D;margin-top:4px}
+.pubTx{background:#fff;padding:14px 12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:flex-start}
+.pubTxLeft .amt{font-size:18px;font-weight:900;color:#C1272D}
+.pubTxRight{text-align:right;max-width:60%}
+.pubTxRight .date{font-size:11px;color:#888}
+.pubTxRight .note{font-size:14px;font-weight:700;color:#111;margin-top:4px}
+.pubTxRight .type{font-size:11px;color:#C1272D;margin-top:2px}
+.restaChipPub{font-size:11px;background:#FFF9C4;border:1px solid #FFE066;padding:4px 10px;border-radius:20px;display:inline-block;color:#111;font-weight:700;margin-top:4px}
+.waCard{margin:20px 12px;background:#fff;border:2px solid #25D366;border-radius:16px;padding:16px;text-align:center}
+.waCard img{width:80px;height:80px;border-radius:50%;margin-bottom:8px}
+.waBtn{background:#25D366;color:#fff;border:none;padding:14px 20px;border-radius:12px;font-weight:900;width:100%;font-size:15px}
+.trashItem{background:#fff;border-bottom:1px solid #eee;padding:12px}
+</style>
+</head>
+<body>
+<div id="lockScreen">
+  <div style="font-size:44px">🔒</div>
+  <h2 style="color:#FFCC00;margin:10px 0">KIZI V8.3</h2>
+  <p style="font-size:11px;color:#aaa">خاص - دخول بالكود</p>
+  <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off" style="max-width:200px;background:#222;color:#FFCC00;border:2px solid #FFCC00;text-align:center;font-size:26px;padding:12px;border-radius:12px;letter-spacing:8px;margin-top:8px">
+  <button class="btnMain" style="max-width:200px;background:#FFCC00;color:#111;margin-top:12px" onclick="unlock()">دخول ✅</button>
+  <p style="font-size:11px;color:#777;margin-top:10px">غير مول المحل اللي عارف الكود</p>
+</div>
+<header>
+  <div style="display:flex;gap:8px">
+    <button class="btnTop" onclick="openSettings()">⚙️</button>
+    <button class="btnTop" onclick="openArchive()">📦</button>
+  </div>
+  <b id="headerTitle">KIZI V8.3</b>
+</header>
+<div id="mainView">
+  <div style="display:flex;gap:8px;margin:10px">
+    <button id="btnClient" class="btnSwitch active" onclick="setFilter('client')">👥 كليان</button>
+    <button id="btnFour" class="btnSwitch" onclick="setFilter('fournisseur')">🚚 فورنيسور</button>
+  </div>
+  <div class="cardBlack"><div id="totalLabel" style="font-size:13px">مجموع الكليان</div><div id="totalAll" class="big">DH 0</div><div id="totalCount" style="font-size:13px">0 كليان</div></div>
+  <div style="display:flex;gap:8px;margin:10px"><button class="btnSort" onclick="setSort('big')">⬇️ أكبر مبلغ</button><button class="btnSort" onclick="setSort('small')">⬆️ أصغر مبلغ</button></div>
+  <div class="searchBox"><div style="background:#111;width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center">💰</div><input id="search" placeholder="قلب بالسمية..."><button class="btnAdd" onclick="openNew()">+</button></div>
+  <div id="list" style="background:#fff;min-height:50vh"></div>
+</div>
+<div id="pageCust">
+  <div style="background:#FFCC00;padding:10px;display:flex;justify-content:space-between;align-items:center">
+    <button onclick="closeCust()" style="background:#111;color:#FFCC00;border:none;padding:8px 16px;border-radius:10px;font-weight:900">← رجوع</button>
+    <div style="text-align:center"><b id="pcName">الزبون</b><div id="pcPhone" style="font-size:11px"></div><div id="pcTypeLabel" style="font-size:10px;background:#111;color:#FFCC00;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:2px">كليان</div></div>
+    <button onclick="openEditCust()" style="background:#fff;border:none;width:42px;height:42px;border-radius:10px">✏️</button>
+  </div>
+  <div style="text-align:center;padding:18px;background:#fff"><div id="pcTotal" style="font-size:34px;font-weight:900;color:#C1272D">DH 0</div></div>
+  <div style="display:flex;justify-content:space-around;padding:10px;background:#fff;border-bottom:1px solid #eee;text-align:center;font-size:11px;font-weight:700;flex-wrap:wrap;gap:6px">
+    <div onclick="archiveCust()" style="cursor:pointer">📦<br>Arxiu</div>
+    <div onclick="shareWA()" style="cursor:pointer">📤<br>واتساب</div>
+    <div onclick="toggleSelectMode()" style="cursor:pointer;background:#FFF3CD;padding:6px 10px;border-radius:10px;border:1px solid #FFC107" id="selBtn">☑️<br>تحديد للمسح</div>
+    <div onclick="openTrashTx()" style="cursor:pointer;background:#FEE2E2;padding:6px 10px;border-radius:10px;border:1px solid #FCA5A5">🗑️<br>سلة العمليات</div>
+    <div onclick="openArchive()" style="cursor:pointer">👥<br>سلة الكليان</div>
+  </div>
+  <div style="display:flex;gap:10px;margin:14px"><button class="btnTake" onclick="openTx('take')">🟢 خديت</button><button class="btnGive" onclick="openTx('give')">🔴 عطيت</button></div>
+  <div id="txList"></div>
+  <div style="padding:12px;padding-bottom:100px"><div style="background:#FFF3CD;border:1px dashed #FFC107;border-radius:12px;padding:12px"><b id="deleteAllLabel" style="font-size:13px">🧹 إلا خلصك؟</b><button class="btnDanger" onclick="openDeleteAllTx()">🗑️ مسح حساب كامل - كيمشي للسلة</button></div></div>
+  <div class="selBar" id="selBar"><div>✅ <span id="selCount">0</span> محددة</div><div style="display:flex;gap:8px"><button onclick="toggleSelectAllTx()" id="btnSelectAllTx" style="background:#FFCC00;color:#111;border:none;padding:10px 12px;border-radius:8px;font-weight:900">☑️ حدد كاملين</button><button onclick="exitSelectMode()" style="background:#fff;color:#111;border:none;padding:10px 16px;border-radius:8px;font-weight:900">إلغاء</button><button onclick="openBulkDelete()" style="background:#B91C1C;color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:900">🗑️ مسح المحدد</button></div></div>
+</div>
+<div id="pageArchive"><div style="background:#111;color:#FFCC00;padding:10px;display:flex;justify-content:space-between;align-items:center"><button onclick="closeArchive()" style="background:#FFCC00;color:#111;border:none;padding:8px 16px;border-radius:10px;font-weight:900">← رجوع</button><b>📦 سلة الكليان</b><div style="width:60px"></div></div><div id="archiveList" style="background:#fff"></div></div>
+<div id="pageTrashTx"><div style="background:#B91C1C;color:#fff;padding:10px;display:flex;justify-content:space-between;align-items:center"><button onclick="closeTrashTx()" style="background:#fff;color:#B91C1C;border:none;padding:8px 16px;border-radius:10px;font-weight:900">← رجوع</button><b>🗑️ سلة العمليات - <span id="trashTxName"></span></b><div style="width:60px"></div></div><div style="display:flex;gap:8px;padding:10px;background:#FFF3CD;align-items:center"><label style="display:flex;gap:6px;align-items:center;font-weight:900;font-size:13px"><input type="checkbox" id="trashSelectAll" class="chk" onchange="toggleAllTrashTx(this.checked)"> حدد كاملين</label><span id="trashSelCount" style="font-weight:900;font-size:13px">0 محددة</span></div><div id="trashTxList"></div><div style="position:sticky;bottom:0;background:#111;padding:12px;display:flex;gap:8px"><button onclick="restoreSelectedTrashTx()" style="flex:1;background:#DCFCE7;border:1px solid #86EFAC;padding:14px;border-radius:10px;font-weight:900">↩️ رجع المحدد</button><button onclick="deleteSelectedTrashTx()" style="flex:1;background:#FEE2E2;border:1px solid #FCA5A5;padding:14px;border-radius:10px;font-weight:900;color:#B91C1C">🗑️ مسح المحدد نهائيا</button></div></div>
+
+
+
+
+
+
+<div id="pagePublic">
+  <div class="pubHeader">
+    <small>متجر كيزي - حسابك</small>
+    <b id="pubName">عبدالهادي دكالي 40</b>
+  </div>
+  <div class="pubTotalBox">
+    <div class="label">المجموع ديالك</div>
+    <div class="total" id="pubTotal">DH 926.5</div>
+  </div>
+  <div id="pubTxList"></div>
+  <div class="waCard" id="waCardPublic">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" onclick="contactShop()" style="cursor:pointer">
+    <h3>إلا بغيتي شي مساعدة؟</h3>
+    <p>ورك هنا تواصل معايا مباشرة فالواتساب</p>
+    <button class="waBtn" onclick="contactShop()">💬 تواصل معايا - 0670440517</button>
+    <div style="font-size:10px;color:#999;margin-top:8px">كيخرج عندي نيشان فالخاص</div>
+  </div>
+  <div style="text-align:center;padding:20px;color:#aaa;font-size:11px">Powered by KIZI</div>
+</div>
+<div class="modal" id="mNew"><div class="modalBox"><h3 id="newTitle">زبون جديد</h3><input id="nName" class="field" placeholder="السمية *"><input id="nPhone" class="field" placeholder="النمرة"><button class="btnMain" id="btnSaveCust" onclick="saveCust()">حفظ ✅</button><button onclick="closeModal('mNew')" style="width:100%;margin-top:6px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
+<div class="modal" id="mTx"><div class="modalBox"><h3 style="text-align:center">شحال؟</h3><input id="txAmount" class="field" type="text" inputmode="decimal" placeholder="مثلا: 11"><input id="txNote" class="field" placeholder="شنو؟"><button class="btnMain" id="btnSaveTx" onclick="saveTx()">حفظ ✅</button><button onclick="closeModal('mTx')" style="width:100%;margin-top:6px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
+<div class="modal" id="mEditCust"><div class="modalBox"><h3>✏️ تعديل الكليان</h3><input id="eName" class="field"><input id="ePhone" class="field"><button class="btnMain" onclick="saveEditCust()">💾 حفظ + Sheet</button><hr style="margin:14px 0"><div style="background:#FFF3CD;border:1px dashed #FFC107;border-radius:12px;padding:12px"><b style="font-size:13px;color:#B91C1C">🗑️ مسح؟</b><button class="btnDanger" onclick="closeModal('mEditCust'); openDeleteAllTx()">🗑️ مسح حساب كامل - كيمشي للسلة</button><button class="btnSalla" style="margin-top:8px;background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5" onclick="closeModal('mEditCust'); askPermDelete(curId, customers[curId]?.name||'')">🗑️ مسح نهائي - كتب مسح</button></div><button onclick="closeModal('mEditCust')" style="width:100%;margin-top:12px;padding:10px;border:none;background:#eee;border-radius:10px">إغلاق</button></div></div>
+<div class="modal" id="mSettings"><div class="modalBox"><h3>⚙️ الإعدادات</h3><p style="font-size:11px;color:#666">نمرة الواتساب ديالك باش يتواصلو معاك الكليان:</p><input id="shopPhone" class="field" placeholder="0670440517" value="212670440517"><input id="newPin" class="field" type="password" placeholder="كود جديد - غير إلا بغيتي تبدلو"><button class="btnMain" onclick="saveSettings()">حفظ الإعدادات ✅</button><hr style="margin:14px 0"><button class="btnBackup" onclick="exportBackup()">💾 نسخة احتياطية</button><button class="btnSalla" onclick="closeModal('mSettings'); openArchive()">📦 سلة الكليان</button><button class="btnSalla" onclick="closeModal('mSettings'); if(curId) openTrashTx()">🗑️ سلة العمليات</button><button onclick="closeModal('mSettings')" style="width:100%;margin-top:12px;padding:10px;border:none;background:#eee;border-radius:10px">إغلاق</button></div></div>
+<div class="modal" id="mEditTx"><div class="modalBox"><h3 style="text-align:center">✏️ تعديل + Sheet</h3><input id="etAmount" class="field" type="text" inputmode="decimal"><input id="etNote" class="field"><div style="display:flex;gap:8px;margin-top:10px"><button class="btnMain" onclick="saveEditTx()" style="flex:1">💾 حفظ + Sheet</button><button onclick="openConfirmDeleteSingle()" style="flex:1;background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5;padding:12px;border-radius:10px;font-weight:900">🗑️ مسح هادي - للسلة</button></div><button onclick="closeModal('mEditTx')" style="width:100%;margin-top:8px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
+<div class="modal" id="mConfirm"><div class="modalBox"><h3 id="confirmTitle" style="text-align:center;color:#B91C1C">⚠️ تأكيد</h3><p id="confirmText" style="font-size:13px;margin:10px 0;text-align:center">كتب كلمة <b style="background:#FEE2E2;padding:2px 6px">مسح</b> - غادي تمشي للسلة و تقدر ترجعها</p><input id="confirmInput" class="field" placeholder="كتب مسح هنا"><button class="btnMain" style="background:#B91C1C" onclick="doConfirmedAction()">تأكيد 🗑️</button><button onclick="closeModal('mConfirm')" style="width:100%;margin-top:8px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
+<div class="modal" id="mConfirmTrash"><div class="modalBox"><h3 id="trashConfirmTitle" style="text-align:center;color:#B91C1C">⚠️ مسح نهائي؟</h3><p style="font-size:13px;margin:10px 0;text-align:center">هادي ما كترجعش - كتب <b style="background:#FEE2E2;padding:2px 6px">مسح</b></p><input id="trashConfirmInput" class="field" placeholder="كتب مسح هنا"><button class="btnMain" style="background:#B91C1C" onclick="doTrashConfirmed()">تأكيد مسح نهائي 🗑️</button><button onclick="closeModal('mConfirmTrash')" style="width:100%;margin-top:8px;padding:10px;border:none;background:#eee;border-radius:10px">إلغاء</button></div></div>
+<script>
+const SHEET_URL="https://script.google.com/macros/s/AKfycbxJAvownby7QUCxvvqAmYhGnDppTVBQmwMRtk41pAi2R8ETRPAjHLrOecyvq9ZHPsye/exec";
+let isSaving=false; let lastSentId="";
+let SHOP_PHONE = localStorage.getItem('kizi_shop_phone') || '212670440517';
+let currentPubData = null;
+function sendToSheet(payload){
+  if(isSaving) return;
+  let key=(payload.ID||"")+"_"+(payload.amount||payload.totalDebt||"")+"_"+(payload.sheet||"");
+  if(lastSentId===key) return;
+  lastSentId=key; isSaving=true;
+  try{
+    const dataStr=encodeURIComponent(JSON.stringify(payload));
+    const url=SHEET_URL+"?data="+dataStr+"&uid="+Date.now();
+    fetch(url,{method:"GET",mode:"no-cors"}).then(()=>{isSaving=false}).catch(()=>{isSaving=false});
+    setTimeout(()=>{isSaving=false; lastSentId="";},2500);
+  }catch(e){isSaving=false}
+}
+const firebaseConfig={apiKey:"AIzaSyBrbaNx5k70ny-p0W8vRZP-6_5p2zMOUJ4",authDomain:"kizzi-shop.firebaseapp.com",projectId:"kizzi-shop",storageBucket:"kizzi-shop.firebasestorage.app",messagingSenderId:"737501957799",appId:"1:737501957799:web:1295635e3d2310619a1582"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+function toLatinNum(s){if(!s)return"";return s.toString().replace(/[٠-٩]/g,d=>String.fromCharCode(d.charCodeAt(0)-1632+48)).replace(/[۰-۹]/g,d=>String.fromCharCode(d.charCodeAt(0)-1728+48)).replace(/,/g,".").replace(/[^0-9.\-]/g,"")}
+function normalizePin(s){if(!s)return"";let r=s.toString();r=r.replace(/[٠-٩]/g,d=>String.fromCharCode(d.charCodeAt(0)-1632+48));r=r.replace(/[۰-۹]/g,d=>String.fromCharCode(d.charCodeAt(0)-1728+48));return r.replace(/[^0-9]/g,'')}
+function fix(n){let v=parseFloat(toLatinNum(n));return isNaN(v)?0:Math.round(v*100)/100}
+function fmt(n){let s=Math.abs(fix(n)).toFixed(1);return s.endsWith('.0')?s.slice(0,-2):s}
+let customers={},curId=null,txType='give',search='',unsubTx=null,savedPin=localStorage.getItem('kizi_pin')||'2020',unsubBook=null,unsubArc=null,unsubTrash=null,filterType='client',sortMode='big',editTxId=null,editTxOldAmount=0,editTxOldType='give',pendingAction=null,pendingTrashAction=null,pendingTrashId=null,selectMode=false,selectedIds=new Set(),trashSelected=new Set(),currentTxIds=[];
+function getCol(){return filterType==='fournisseur' ? 'credit_fournisseurs' : 'credit_customers'}
+function getSheetName(){return filterType==='fournisseur' ? 'fournisseurs' : 'clients'}
+function closeModal(id){document.getElementById(id).classList.remove('on')}
+function isUnlocked(){let t=localStorage.getItem('kizi_unlock_time');return t&&(Date.now()-Number(t))<90*24*60*60*1000}
+function unlock(){
+  let raw=document.getElementById('pinInput').value||'';
+  let v=normalizePin(raw);
+  let cur=normalizePin(savedPin||'2020');
+  if(v && v.length===4 && v===cur){
+    document.getElementById('lockScreen').style.display='none';
+    document.getElementById('pinInput').value='';
+    localStorage.setItem('kizi_unlock_time',Date.now().toString());
+  } else {
+    alert('الكود غالط');
+    document.getElementById('pinInput').value='';
+    document.getElementById('pinInput').focus();
+  }
+}
+function openSettings(){document.getElementById('shopPhone').value=SHOP_PHONE;document.getElementById('newPin').value='';document.getElementById('mSettings').classList.add('on')}
+function saveSettings(){
+  let p=normalizePin(document.getElementById('newPin').value.trim());
+  if(p){ if(p.length!==4)return alert('خاص 4 أرقام'); localStorage.setItem('kizi_pin',p); savedPin=p; }
+  let phone=document.getElementById('shopPhone').value.trim().replace(/[^0-9]/g,'');
+  if(phone){
+    if(phone.startsWith('0')) phone='212'+phone.slice(1);
+    if(phone.length==9) phone='212'+phone;
+    localStorage.setItem('kizi_shop_phone', phone);
+    SHOP_PHONE=phone;
+  }
+  alert('تم الحفظ ✅');
+  closeModal('mSettings');
+}
+function setFilter(t){filterType=t;document.getElementById('btnClient').classList.toggle('active',t=='client');document.getElementById('btnFour').classList.toggle('active',t=='fournisseur');document.getElementById('totalLabel').textContent=t==='fournisseur'?'مجموع الفورنيسور':'مجموع الكليان';document.getElementById('headerTitle').textContent=t==='fournisseur'?'KIZI - فورنيسور':'KIZI - كليان';render();loadBook();}
+function setSort(m){sortMode=m;render()}
+function loadBook(){if(unsubBook)unsubBook();unsubBook=db.collection(getCol()).where('archived','==',false).onSnapshot(s=>{customers={};s.forEach(d=>{customers[d.id]=d.data()});render()})}
+function render(){let div=document.getElementById('list');div.innerHTML='';let ids=Object.keys(customers).filter(id=>!search||customers[id].name.toLowerCase().includes(search));ids.sort((a,b)=>{let da=Math.abs(fix(customers[a].totalDebt)),db=Math.abs(fix(customers[b].totalDebt));return sortMode=='small'?da-db:db-da});if(!ids.length){div.innerHTML='<div style="text-align:center;padding:20px;color:#999">📭 خاوية</div>';document.getElementById('totalAll').textContent='DH 0';document.getElementById('totalCount').textContent='0 كليان';return}ids.forEach(id=>{let c=customers[id];let icon=filterType==='fournisseur'?'🚚':'👤';let col=fix(c.totalDebt)<0?'#15803D':'#C1272D';div.innerHTML+=`<div class="list-item" onclick="openCust('${id}')"><div style="display:flex;align-items:center;gap:8px"><span>${icon}</span><b>${c.name}</b></div><span style="color:${col};font-weight:900">DH ${fmt(fix(c.totalDebt))}</span></div>`});let total=0;Object.values(customers).forEach(c=>total+=fix(c.totalDebt));let totCol=total<0?'#15803D':'#C1272D';document.getElementById('totalAll').style.color=totCol;document.getElementById('totalAll').textContent=`DH ${fmt(total)}`;document.getElementById('totalCount').textContent=`${Object.keys(customers).length} ${filterType==='fournisseur'?'فورنيسور':'كليان'}`}
+document.getElementById('search').addEventListener('input',e=>{search=e.target.value.toLowerCase();render()});
+function openNew(){document.getElementById('mNew').classList.add('on')}
+async function saveCust(){if(isSaving){alert('تسنا شوية');return}let name=document.getElementById('nName').value.trim();if(!name)return alert('كتب السمية');let phone=document.getElementById('nPhone').value.trim();closeModal('mNew');try{let col=getCol();let sheet=getSheetName();let ref=await db.collection(col).add({name,phone,totalDebt:0,archived:false,type:sheet,createdAt:firebase.firestore.FieldValue.serverTimestamp()});const link=location.origin+location.pathname+'?c='+ref.id+'&t='+sheet;sendToSheet({sheet:sheet,ID:ref.id,name:name,phone:phone,totalDebt:0,type:sheet,updatedAt:new Date().toISOString(),link:link,book:sheet});setTimeout(()=>openCust(ref.id),700)}catch(e){alert('خطأ: '+e.message)}}
+function openCust(id){curId=id;let c=customers[id];document.getElementById('pcName').textContent=c.name;document.getElementById('pcPhone').textContent=c.phone||'';let debt=fix(c.totalDebt);let col=debt<0?'#15803D':'#C1272D';document.getElementById('pcTotal').textContent=`DH ${fmt(debt)}`;document.getElementById('pcTotal').style.color=col;document.getElementById('pageCust').style.display='block';try{history.pushState({page:'cust',id:id},'')}catch(e){}loadTx()}
+function closeCust(){let isOpen=document.getElementById('pageCust').style.display==='block';document.getElementById('pageCust').style.display='none';if(unsubTx)unsubTx();exitSelectMode();loadBook();if(isOpen && history.state && history.state.page==='cust'){try{history.back()}catch(e){}}}
+function closeCustNoBack(){document.getElementById('pageCust').style.display='none';if(unsubTx)unsubTx();exitSelectMode();loadBook()}
+function openTx(t){txType=t;document.getElementById('mTx').classList.add('on');document.getElementById('txAmount').value='';document.getElementById('txNote').value='';document.getElementById('txAmount').focus()}
+function toggleSelectMode(){selectMode=!selectMode;if(selectMode){document.getElementById('selBar').classList.add('on');document.getElementById('selBtn').innerHTML='❌<br>إلغاء'}else{exitSelectMode()}loadTx()}
+function exitSelectMode(){selectMode=false;selectedIds.clear();document.getElementById('selBar').classList.remove('on');document.getElementById('selBtn').innerHTML='☑️<br>تحديد للمسح';document.getElementById('selCount').textContent='0';let b=document.getElementById('btnSelectAllTx');if(b)b.textContent='☑️ حدد كاملين';loadTx()}
+function toggleOne(id){if(selectedIds.has(id)){selectedIds.delete(id)}else{selectedIds.add(id)}document.getElementById('selCount').textContent=selectedIds.size;let b=document.getElementById('btnSelectAllTx');if(b)b.textContent=(selectedIds.size===currentTxIds.length&&currentTxIds.length>0)?'❌ حيد التحديد':'☑️ حدد كاملين';loadTx()}
+function toggleSelectAllTx(){if(selectedIds.size===currentTxIds.length&&currentTxIds.length>0){selectedIds.clear();document.getElementById('btnSelectAllTx').textContent='☑️ حدد كاملين'}else{currentTxIds.forEach(id=>selectedIds.add(id));document.getElementById('btnSelectAllTx').textContent='❌ حيد التحديد'}document.getElementById('selCount').textContent=selectedIds.size;loadTx()}
+
+
+
+
+function loadTx(){if(unsubTx)unsubTx();unsubTx=db.collection(getCol()).doc(curId).collection('transactions').orderBy('createdAt','desc').limit(300).onSnapshot(s=>{let dEl=document.getElementById('txList');dEl.innerHTML='';currentTxIds=[];s.forEach(doc=>currentTxIds.push(doc.id));if(s.empty){dEl.innerHTML='<div style="text-align:center;padding:20px;color:#999">ما كاين والو</div>';return}let running=fix(customers[curId].totalDebt);s.forEach(doc=>{let t=doc.data();let date=t.createdAt?new Date(t.createdAt.seconds*1000).toLocaleDateString('ar-MA'):'';let safeNote=(t.note||'').replace(/'/g,"\\'");let isSel=selectedIds.has(doc.id);let checkBox=selectMode?`<input type="checkbox" class="chk" ${isSel?'checked':''}>`:'';let rowClass=isSel&&selectMode?'txRowSel':'';let clickAction=selectMode?`toggleOne('${doc.id}')`:`openEditTx('${doc.id}',${fix(t.amount)},'${safeNote}','${t.type}')`;let notePart=t.note?` - ${t.note}`:'';let chipColor=t.type=='give'?'background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5':'background:#DCFCE7;color:#15803D;border:1px solid #86EFAC';dEl.innerHTML+=`<div onclick="${clickAction}" class="${rowClass}" style="background:#fff;padding:12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center"><div style="display:flex;gap:10px;align-items:center">${checkBox}<div><div style="font-weight:700"><span style="color:${t.type=='give'?'#C1272D':'#15803D'}">${t.type=='give'?'🔴 عطيت':'🟢 خديت'} DH ${fmt(t.amount)}</span>${notePart}</div><div class="restaChip" style="${chipColor}">Resta: DH ${fmt(running)}</div><div style="font-size:10px;color:#888">${date}</div></div></div><div>${selectMode?'':'✏️'}</div></div>`;if(t.type=='give')running=fix(running-fix(t.amount));else running=fix(running+fix(t.amount))});document.getElementById('selCount').textContent=selectedIds.size})}
+function openEditTx(id,amount,note,type){if(selectMode)return;editTxId=id;editTxOldAmount=fix(amount);editTxOldType=type;document.getElementById('etAmount').value=amount;document.getElementById('etNote').value=note;document.getElementById('mEditTx').classList.add('on')}
+async function saveEditTx(){let newAmt=fix(document.getElementById('etAmount').value);if(!newAmt)return alert('كتب المبلغ');let newNote=document.getElementById('etNote').value.trim();let cur=fix(customers[curId].totalDebt);let diff=fix(editTxOldType=='give'?newAmt-editTxOldAmount:editTxOldAmount-newAmt);let newDebt=fix(cur+diff);closeModal('mEditTx');await db.collection(getCol()).doc(curId).collection('transactions').doc(editTxId).update({amount:newAmt,note:newNote});await db.collection(getCol()).doc(curId).update({totalDebt:newDebt});document.getElementById('pcTotal').textContent=`DH ${fmt(newDebt)}`;document.getElementById('pcTotal').style.color=newDebt<0?'#15803D':'#C1272D';customers[curId].totalDebt=newDebt;const c=customers[curId];const link=location.origin+location.pathname+'?c='+curId+'&t='+getSheetName();sendToSheet({sheet:getSheetName(),ID:curId,name:c.name,phone:c.phone||'',totalDebt:newDebt,type:getSheetName(),updatedAt:new Date().toISOString(),link:link,book:getSheetName()});}
+function openConfirmDeleteSingle(){closeModal('mEditTx');document.getElementById('confirmTitle').textContent='مسح عملية وحدة؟ غادي تمشي للسلة';document.getElementById('confirmInput').value='';pendingAction='singleTx';document.getElementById('mConfirm').classList.add('on')}
+function openDeleteAllTx(){document.getElementById('confirmTitle').textContent='مسح حساب كامل؟ كاملين غادي يمشيو للسلة';document.getElementById('confirmInput').value='';pendingAction='allTx';document.getElementById('mConfirm').classList.add('on')}
+function openBulkDelete(){if(selectedIds.size==0){alert('ما حددتي والو');return}document.getElementById('confirmTitle').textContent='مسح '+selectedIds.size+'؟ غادي يمشيو للسلة';document.getElementById('confirmInput').value='';pendingAction='bulk';document.getElementById('mConfirm').classList.add('on')}
+async function moveOneToTrashTx(txId, txData){
+  let col=getCol();
+  await db.collection('trash_tx').add({clientId:curId,clientName:customers[curId]?.name||'',book:getSheetName(),col:col,origId:txId,type:txData.type,amount:fix(txData.amount),note:txData.note||'',origCreatedAt:txData.createdAt||null,deletedAt:firebase.firestore.FieldValue.serverTimestamp()});
+  await db.collection(col).doc(curId).collection('transactions').doc(txId).delete();
+}
+async function doConfirmedAction(){
+  let txt=document.getElementById('confirmInput').value.trim();if(txt!=='مسح'&&txt.toLowerCase()!=='delete'){alert('خاص تكتب مسح');return}closeModal('mConfirm');
+  let col=getCol();let sheet=getSheetName();
+  try{
+  if(pendingAction==='singleTx'){
+    let snap=await db.collection(col).doc(curId).collection('transactions').doc(editTxId).get();if(!snap.exists)return;
+    let t=snap.data();await moveOneToTrashTx(editTxId,t);
+    let cur=fix(customers[curId].totalDebt);let newDebt=fix(editTxOldType=='give'?cur-editTxOldAmount:cur+editTxOldAmount);
+    await db.collection(col).doc(curId).update({totalDebt:newDebt});document.getElementById('pcTotal').textContent=`DH ${fmt(newDebt)}`;document.getElementById('pcTotal').style.color=newDebt<0?'#15803D':'#C1272D';customers[curId].totalDebt=newDebt;
+    const c=customers[curId];sendToSheet({sheet:sheet,ID:curId,name:c.name,phone:c.phone||'',totalDebt:newDebt,type:sheet,updatedAt:new Date().toISOString(),link:'',book:sheet});
+  } else if(pendingAction==='allTx'){
+    let snap=await db.collection(col).doc(curId).collection('transactions').get();
+    let batch=db.batch();
+    snap.forEach(d=>{let t=d.data();let newRef=db.collection('trash_tx').doc();batch.set(newRef,{clientId:curId,clientName:customers[curId]?.name||'',book:getSheetName(),col:col,origId:d.id,type:t.type,amount:fix(t.amount),note:t.note||'',origCreatedAt:t.createdAt||null,deletedAt:firebase.firestore.FieldValue.serverTimestamp()});batch.delete(d.ref)});
+    batch.update(db.collection(col).doc(curId),{totalDebt:0});
+    await batch.commit();
+    customers[curId].totalDebt=0;document.getElementById('pcTotal').textContent='DH 0';document.getElementById('pcTotal').style.color='#C1272D';
+    const c=customers[curId];sendToSheet({sheet:sheet,ID:curId,name:c.name,phone:c.phone||'',totalDebt:0,type:sheet,updatedAt:new Date().toISOString(),link:'',book:sheet});
+  } else if(pendingAction==='bulk'){
+    let cur=fix(customers[curId].totalDebt);let totalToRemove=0;
+    let ids=[...selectedIds];
+    let snaps=await Promise.all(ids.map(id=>db.collection(col).doc(curId).collection('transactions').doc(id).get()));
+    let batch=db.batch();
+    snaps.forEach(snap=>{if(!snap.exists)return;let t=snap.data();if(t.type=='give')totalToRemove+=fix(t.amount);else totalToRemove-=fix(t.amount);let newRef=db.collection('trash_tx').doc();batch.set(newRef,{clientId:curId,clientName:customers[curId]?.name||'',book:getSheetName(),col:col,origId:snap.id,type:t.type,amount:fix(t.amount),note:t.note||'',origCreatedAt:t.createdAt||null,deletedAt:firebase.firestore.FieldValue.serverTimestamp()});batch.delete(snap.ref)});
+    let newDebt=fix(cur-totalToRemove);
+    batch.update(db.collection(col).doc(curId),{totalDebt:newDebt});
+    await batch.commit();
+    customers[curId].totalDebt=newDebt;document.getElementById('pcTotal').textContent=`DH ${fmt(newDebt)}`;document.getElementById('pcTotal').style.color=newDebt<0?'#15803D':'#C1272D';
+    const c=customers[curId];sendToSheet({sheet:sheet,ID:curId,name:c.name,phone:c.phone||'',totalDebt:newDebt,type:sheet,updatedAt:new Date().toISOString(),link:'',book:sheet});exitSelectMode();
+  } else if(pendingAction&&pendingAction.startsWith('perm_')){let id=pendingAction.split('_')[1];await db.collection(getCol()).doc(id).delete()}
+  else if(pendingAction==='archive'){await db.collection(col).doc(curId).update({archived:true});closeCust()}
+  }catch(e){alert('خطأ: '+e.message)}
+  pendingAction=null;loadBook();
+}
+function openTrashTx(){if(!curId){alert('دخل لشي كليان بعدا');return}trashSelected.clear();document.getElementById('trashTxName').textContent=customers[curId]?.name||'';document.getElementById('pageTrashTx').style.display='block';try{history.pushState({page:'trash'},'')}catch(e){}if(unsubTrash)unsubTrash();unsubTrash=db.collection('trash_tx').where('clientId','==',curId).onSnapshot(s=>{let div=document.getElementById('trashTxList');div.innerHTML='';let allCb=document.getElementById('trashSelectAll');if(allCb)allCb.checked=false;document.getElementById('trashSelCount').textContent='0 محددة';if(s.empty){div.innerHTML='<div style="text-align:center;padding:30px;color:#999">🗑️ السلة خاوية<br><span style="font-size:12px">أي عملية مسحتيها غادي تلقاها هنا</span></div>';return}let arr=[];s.forEach(d=>arr.push({id:d.id,...d.data()}));arr.sort((a,b)=>{let ta=a.deletedAt?a.deletedAt.seconds:0;let tb=b.deletedAt?b.deletedAt.seconds:0;return tb-ta});arr.forEach(t=>{let date=t.deletedAt?new Date(t.deletedAt.seconds*1000).toLocaleDateString('ar-MA'):'';let notePart=t.note?` - ${t.note}`:'';let isSel=trashSelected.has(t.id);div.innerHTML+=`<div class="trashItem" onclick="toggleOneTrashTx('${t.id}')" style="${isSel?'background:#FFF9C4;border-right:4px solid #FFCC00':''}"><div style="display:flex;gap:10px;align-items:center"><input type="checkbox" class="chk" ${isSel?'checked':''} onclick="event.stopPropagation();toggleOneTrashTx('${t.id}')"><div><div style="font-weight:900;color:${t.type=='give'?'#C1272D':'#15803D'}">${t.type=='give'?'🔴 عطيت':'🟢 خديت'} DH ${fmt(t.amount)}${notePart}</div><div style="font-size:11px;color:#888">تمسحات: ${date}</div></div></div></div>`})})}
+function closeTrashTx(){let isOpen=document.getElementById('pageTrashTx').style.display==='block';document.getElementById('pageTrashTx').style.display='none';if(unsubTrash)unsubTrash();if(isOpen && history.state && history.state.page==='trash'){try{history.back()}catch(e){}}}
+function closeTrashTxNoBack(){document.getElementById('pageTrashTx').style.display='none';if(unsubTrash)unsubTrash()}
+function toggleOneTrashTx(id){if(trashSelected.has(id))trashSelected.delete(id);else trashSelected.add(id);document.getElementById('trashSelCount').textContent=trashSelected.size+' محددة';let div=document.getElementById('trashTxList');let total=div.querySelectorAll('.trashItem').length;let allCb=document.getElementById('trashSelectAll');if(allCb)allCb.checked=(trashSelected.size>0&&trashSelected.size===total);openTrashTxRefresh();}
+function toggleAllTrashTx(checked){let div=document.getElementById('trashTxList');let items=div.querySelectorAll('.trashItem');trashSelected.clear();if(checked){items.forEach(el=>{let m=el.getAttribute('onclick');if(m){let id=m.match(/'([^']+)'/)[1];trashSelected.add(id)}})}document.getElementById('trashSelCount').textContent=trashSelected.size+' محددة';openTrashTxRefresh();}
+function openTrashTxRefresh(){let div=document.getElementById('trashTxList');div.querySelectorAll('.trashItem').forEach(el=>{let m=el.getAttribute('onclick');if(!m)return;let id=m.match(/'([^']+)'/)[1];let cb=el.querySelector('input[type=checkbox]');if(cb)cb.checked=trashSelected.has(id);el.style.background=trashSelected.has(id)?'#FFF9C4':'#fff';el.style.borderRight=trashSelected.has(id)?'4px solid #FFCC00':'none'})}
+async function restoreSelectedTrashTx(){
+  if(trashSelected.size==0){alert('كوشي على وحدة بعدا - ولا حدد كاملين');return}
+  let ids=[...trashSelected];
+  let snaps=await Promise.all(ids.map(id=>db.collection('trash_tx').doc(id).get()));
+  let col=getCol();
+  let batch=db.batch();
+  let totalAdd=0;
+  snaps.forEach(snap=>{if(!snap.exists)return;let t=snap.data();let cId=t.clientId;let newRef=db.collection(col).doc(cId).collection('transactions').doc();batch.set(newRef,{type:t.type,amount:fix(t.amount),note:t.note||'',createdAt:firebase.firestore.FieldValue.serverTimestamp()});batch.delete(snap.ref);if(t.type=='give')totalAdd+=fix(t.amount);else totalAdd-=fix(t.amount)});
+  let custSnap=await db.collection(col).doc(curId).get();let curDebt=custSnap.exists?fix(custSnap.data().totalDebt):0;
+  let newDebt=fix(curDebt+totalAdd);
+  batch.update(db.collection(col).doc(curId),{totalDebt:newDebt});
+  await batch.commit();
+  trashSelected.clear();
+  if(customers[curId]){customers[curId].totalDebt=newDebt;document.getElementById('pcTotal').textContent=`DH ${fmt(newDebt)}`;document.getElementById('pcTotal').style.color=newDebt<0?'#15803D':'#C1272D'}
+  alert('رجعو كاملين بالزربة ✅');
+}
+function deleteSelectedTrashTx(){if(trashSelected.size==0){alert('كوشي على وحدة بعدا');return}pendingTrashAction='selected';document.getElementById('trashConfirmInput').value='';document.getElementById('trashConfirmTitle').textContent='مسح '+trashSelected.size+' نهائيا؟';document.getElementById('mConfirmTrash').classList.add('on')}
+async function doTrashConfirmed(){
+  let txt=document.getElementById('trashConfirmInput').value.trim();if(txt!=='مسح'){alert('خاص تكتب مسح');return}closeModal('mConfirmTrash');
+  if(pendingTrashAction==='selected'){
+    let ids=[...trashSelected];
+    let batch=db.batch();ids.forEach(id=>batch.delete(db.collection('trash_tx').doc(id)));await batch.commit();
+    trashSelected.clear();alert('تمسحات كاملين بالزربة ✅');
+  }
+  else if(pendingTrashAction==='all'){let snap=await db.collection('trash_tx').where('clientId','==',curId).get();let b=db.batch();snap.forEach(d=>b.delete(d.ref));await b.commit();alert('تمسحات كاملين نهائيا')}
+  else if(pendingTrashAction==='one'&&pendingTrashId){await db.collection('trash_tx').doc(pendingTrashId).delete()}
+  pendingTrashAction=null;pendingTrashId=null;
+}
+async function saveTx(){
+  if(isSaving){alert('تسنا ثانية...');return}
+  let raw=document.getElementById('txAmount').value;let amt=fix(raw);if(!amt)return alert('كتب شحال');
+  let note=document.getElementById('txNote').value.trim();
+  let cur=fix(customers[curId].totalDebt);let newDebt=fix(txType=='give'?cur+amt:cur-amt);
+  document.getElementById('btnSaveTx').disabled=true;
+  document.getElementById('btnSaveTx').textContent='كيسجل...';
+  closeModal('mTx');
+  try{
+    let col=getCol();let sheet=getSheetName();
+    let ref=await db.collection(col).doc(curId).collection('transactions').add({type:txType,amount:amt,note,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    await db.collection(col).doc(curId).update({totalDebt:newDebt});
+    document.getElementById('pcTotal').textContent=`DH ${fmt(newDebt)}`;
+    document.getElementById('pcTotal').style.color=newDebt<0?'#15803D':'#C1272D';
+    customers[curId].totalDebt=newDebt;
+    const c=customers[curId];
+    const link=location.origin+location.pathname+'?c='+curId+'&t='+sheet;
+    sendToSheet({sheet:sheet,ID:curId,name:c.name,phone:c.phone||'',totalDebt:newDebt,type:sheet,updatedAt:new Date().toISOString(),link:link,book:sheet});
+    sendToSheet({sheet:'transactions',ID:ref.id,clientId:curId,clientName:c.name,type:txType,amount:amt,note:note,date:new Date().toISOString(),book:sheet,totalDebt:newDebt});
+  }catch(e){alert('خطأ: '+e.message)}finally{
+    document.getElementById('btnSaveTx').disabled=false;
+    document.getElementById('btnSaveTx').textContent='حفظ ✅';
+    setTimeout(()=>{isSaving=false; lastSentId="";},2500);
+  }
+}
+function openEditCust(){let c=customers[curId];document.getElementById('eName').value=c.name;document.getElementById('ePhone').value=c.phone||'';document.getElementById('mEditCust').classList.add('on')}
+function saveEditCust(){let n=document.getElementById('eName').value.trim();let p=document.getElementById('ePhone').value.trim();closeModal('mEditCust');let col=getCol();let sheet=getSheetName();db.collection(col).doc(curId).update({name:n,phone:p});document.getElementById('pcName').textContent=n;document.getElementById('pcPhone').textContent=p;if(customers[curId]){customers[curId].name=n;customers[curId].phone=p;const link=location.origin+location.pathname+'?c='+curId+'&t='+sheet;sendToSheet({sheet:sheet,ID:curId,name:n,phone:p,totalDebt:fix(customers[curId].totalDebt),type:sheet,updatedAt:new Date().toISOString(),link:link,book:sheet})}}
+async function archiveCust(){document.getElementById('confirmTitle').textContent='تصيفط للسلة؟';document.getElementById('confirmInput').value='';pendingAction='archive';document.getElementById('mConfirm').classList.add('on')}
+function openArchive(){document.getElementById('pageArchive').style.display='block';try{history.pushState({page:'archive'},'')}catch(e){}if(unsubArc)unsubArc();unsubArc=db.collection(getCol()).where('archived','==',true).onSnapshot(s=>{let div=document.getElementById('archiveList');div.innerHTML='';if(s.empty){div.innerHTML='<div style="text-align:center;padding:20px;color:#999">السلة خاوية</div>';return}s.forEach(d=>{let c=d.data();div.innerHTML+=`<div class="list-item" style="flex-direction:column;align-items:stretch;gap:8px"><div style="display:flex;justify-content:space-between"><div><b>${c.name}</b><div style="font-size:11px">DH ${fmt(fix(c.totalDebt))}</div></div></div><div style="display:flex;gap:8px"><button onclick="restoreCust('${d.id}')" style="flex:1;background:#DCFCE7;padding:10px;border-radius:8px">↩️ رجع</button><button onclick="askPermDelete('${d.id}','${c.name}')" style="flex:1;background:#fff;color:#B91C1C;border:1px solid #FCA5A5;padding:10px;border-radius:8px">🗑️ مسح نهائي</button></div></div>`})})}
+function closeArchive(){let isOpen=document.getElementById('pageArchive').style.display==='block';document.getElementById('pageArchive').style.display='none';if(unsubArc)unsubArc();if(isOpen && history.state && history.state.page==='archive'){try{history.back()}catch(e){}}}
+function closeArchiveNoBack(){document.getElementById('pageArchive').style.display='none';if(unsubArc)unsubArc()}
+async function restoreCust(id){await db.collection(getCol()).doc(id).update({archived:false});alert('رجع ✅')}
+function askPermDelete(id,name){document.getElementById('confirmTitle').textContent='مسح نهائي؟';document.getElementById('confirmInput').value='';pendingAction='perm_'+id;document.getElementById('mConfirm').classList.add('on')}
+function formatPhoneForWA(raw){if(!raw)return"";let p=raw.replace(/[^0-9]/g,"");if(p.startsWith("0"))p="212"+p.slice(1);if(p.length==9)p="212"+p;return p}
+function shareWA(){if(!curId)return;let c=customers[curId];let phone=formatPhoneForWA(c.phone||"");let link=location.origin+location.pathname+'?c='+curId+'&t='+getSheetName();let msg=`السلام ${c.name} - DH ${fmt(c.totalDebt)} - ${link}`;window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank')}
+function exportBackup(){let data={customers:customers,exportedAt:new Date().toISOString()};let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});let url=URL.createObjectURL(blob);let a=document.createElement('a');a.href=url;a.download='kizi-backup.json';a.click()}
+async function loadPublicPage(cId){
+  try{
+    let params=new URLSearchParams(location.search);
+    let col = params.get('t')==='fournisseurs' ? 'credit_fournisseurs' : 'credit_customers';
+    let doc=await db.collection(col).doc(cId).get();
+    if(!doc.exists){document.getElementById('pubName').textContent='ما كاينش';return}
+    let c=doc.data();
+    currentPubData=c;
+    document.getElementById('pubName').textContent=c.name;
+    let debt=fix(c.totalDebt);
+    document.getElementById('pubTotal').textContent=`DH ${fmt(debt)}`;
+    document.getElementById('pubTotal').style.color=debt<0?'#15803D':'#C1272D';
+    let snap=await db.collection(col).doc(cId).collection('transactions').orderBy('createdAt','desc').limit(100).get();
+    let div=document.getElementById('pubTxList');
+    div.innerHTML='';
+    let running = fix(c.totalDebt);
+    if(snap.empty){
+      div.innerHTML='<div style="text-align:center;padding:20px;color:#999">ما كاين والو</div>';
+    } else {
+      snap.forEach(d=>{
+        let t=d.data();
+        let dateStr = t.createdAt ? new Date(t.createdAt.seconds*1000).toLocaleString('ar-MA', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
+        let note = t.note || '';
+        let notePart = note?` - ${note}`:'';
+        let amt = fmt(t.amount);
+        let resta = fmt(running);
+        let chipColor=t.type=='give'?'background:#FEE2E2;color:#B91C1C;border:1px solid #FCA5A5':'background:#DCFCE7;color:#15803D;border:1px solid #86EFAC';
+        let typeColor=t.type=='give'?'#C1272D':'#15803D';
+        let typeTxt=t.type=='give'?'🔴 عطيتك':'🟢 خديت منك';
+        div.innerHTML+=`
+          <div class="pubTx">
+            <div class="pubTxLeft">
+              <div class="amt" style="color:${typeColor}">DH ${amt}</div>
+              <div class="restaChipPub" style="${chipColor}">Resta: ${resta}</div>
+            </div>
+            <div class="pubTxRight">
+              <div class="date">${dateStr}</div>
+              <div class="note">${t.type=='give'?'🔴 عطيت':'🟢 خديت'} DH ${amt}${notePart}</div>
+              <div class="type" style="color:${typeColor}">${typeTxt}</div>
+            </div>
+          </div>`;
+        if(t.type=='give') running = fix(running - fix(t.amount));
+        else running = fix(running + fix(t.amount));
+      });
+    }
+  }catch(e){console.log(e)}
+}
+function contactShop(){
+  let phone = SHOP_PHONE || localStorage.getItem('kizi_shop_phone') || '212670440517';
+  phone = phone.replace(/[^0-9]/g,'');
+  if(phone.startsWith('0')) phone='212'+phone.slice(1);
+  let name = currentPubData ? currentPubData.name : (document.getElementById('pubName').textContent||'الزبون');
+  let total = currentPubData ? fmt(fix(currentPubData.totalDebt)) : (document.getElementById('pubTotal').textContent||'');
+  let msg = `السلام، أنا ${name} - شفت الحساب ديالي ${total} - بغيت نسولك`;
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+window.addEventListener('popstate', function(e){
+  if(document.getElementById('pageTrashTx') && document.getElementById('pageTrashTx').style.display==='block'){closeTrashTxNoBack();return}
+  if(document.getElementById('pageArchive') && document.getElementById('pageArchive').style.display==='block'){closeArchiveNoBack();return}
+  if(document.getElementById('pageCust') && document.getElementById('pageCust').style.display==='block'){closeCustNoBack();return}
+});
+(function checkLink(){let p=new URLSearchParams(location.search);let cId=p.get('c');if(cId){document.getElementById('lockScreen').style.display='none';document.getElementById('mainView').style.display='none';document.getElementById('pagePublic').style.display='block';loadPublicPage(cId);return}if(p.has('resetpin')){localStorage.removeItem('kizi_pin');localStorage.removeItem('kizi_unlock_time')}if(isUnlocked())document.getElementById('lockScreen').style.display='none';document.getElementById('pinInput').addEventListener('keydown',e=>{if(e.key=='Enter')unlock()});loadBook()})();
+</script>
+<script>
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+</script>
+</body>
+</html>
